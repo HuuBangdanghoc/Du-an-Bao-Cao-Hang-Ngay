@@ -1,4 +1,4 @@
-# 📅 Bảng Điều Khiển Ngày
+# 📅 Bảng Điều Khiển 
 
 Web app cá nhân giúp quản lý **lịch học, lịch chạy xe, mục tiêu Deep Work** theo từng thứ trong tuần, kèm **theo dõi thu chi hằng ngày** với cảnh báo tự động. Toàn bộ dữ liệu được đồng bộ vào **Google Sheets** của bạn thông qua Google Apps Script — không cần server, không tốn phí.
 
