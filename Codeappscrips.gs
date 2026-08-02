@@ -30,7 +30,8 @@ function doGet(e) {
     return jsonOutput({
       date: date,
       transactions: getTransactionsByDate(date),
-      goals: getGoalsByDate(date)
+      goals: getGoalsByDate(date),
+      stats: getFinanceStats(date) // Gửi thêm thống kê Tuần/Tháng
     });
   } catch (err) {
     return jsonOutput({ error: String(err) });
@@ -80,7 +81,11 @@ function scheduleSheet_(){ return getSheet_(SHEET_SCHEDULE, ['ID','Weekday','Cat
 function addTransaction(body) {
   txSheet_().appendRow([
     body.id || ('tx_' + Date.now()),
-    body.date, body.type, Number(body.amount) || 0, body.note || '', new Date()
+    "'" + body.date, // Ép thành văn bản thuần
+    body.type, 
+    Number(body.amount) || 0, 
+    body.note || '', 
+    new Date()
   ]);
 }
 function deleteTransaction(body) {
@@ -113,7 +118,7 @@ function setGoal(body) {
       return;
     }
   }
-  sheet.appendRow([body.date, body.goalId, !!body.completed, new Date()]);
+  sheet.appendRow(["'" + body.date, body.goalId, !!body.completed, new Date()]); // Ép thành văn bản thuần
 }
 function getGoalsByDate(date) {
   const data = goalsSheet_().getDataRange().getValues();
@@ -128,7 +133,11 @@ function getGoalsByDate(date) {
 function addScheduleItem(body) {
   scheduleSheet_().appendRow([
     body.id || ('it_' + Date.now()),
-    body.weekday, body.category, body.time || '', body.desc || '', new Date()
+    "'" + body.date, // Ép thành văn bản thuần
+    body.category, 
+    body.time || '', 
+    body.desc || '', 
+    new Date()
   ]);
 }
 function deleteScheduleItem(body) {
@@ -161,4 +170,42 @@ function formatDate_(value) {
 }
 function jsonOutput(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+/* ---------- TÍNH THỐNG KÊ TUẦN / THÁNG ---------- */
+function getFinanceStats(targetDateStr) {
+  const targetDate = new Date(targetDateStr);
+  const targetMonthStr = targetDateStr.substring(0, 7); // yyyy-MM
+  
+  // Tính 7 ngày trong tuần của ngày đang chọn (Thứ 2 đến CN)
+  const day = targetDate.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(targetDate);
+  monday.setDate(targetDate.getDate() + diff);
+  
+  const weekStrs = [];
+  for(let i = 0; i < 7; i++) {
+    let d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    weekStrs.push(formatDate_(d));
+  }
+
+  const data = txSheet_().getDataRange().getValues();
+  let wThu = 0, wChi = 0, mThu = 0, mChi = 0;
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const dateStr = formatDate_(row[1]);
+    const type = row[2];
+    const amount = Number(row[3]) || 0;
+
+    // Cộng dồn tháng
+    if (dateStr.startsWith(targetMonthStr)) {
+      if (type === 'thu') mThu += amount; else mChi += amount;
+    }
+    // Cộng dồn tuần
+    if (weekStrs.indexOf(dateStr) !== -1) {
+      if (type === 'thu') wThu += amount; else wChi += amount;
+    }
+  }
+  return { week: { thu: wThu, chi: wChi }, month: { thu: mThu, chi: mChi } };
 }
