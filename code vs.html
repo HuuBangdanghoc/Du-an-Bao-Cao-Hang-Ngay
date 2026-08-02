@@ -1,0 +1,1341 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bảng Điều Khiển Ngày · Personal Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #10141c;
+        --bg-grain:
+          radial-gradient(
+            circle at 20% 10%,
+            rgba(242, 169, 59, 0.06),
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 80% 90%,
+            rgba(79, 209, 197, 0.06),
+            transparent 40%
+          );
+        --surface: #171d28;
+        --surface-2: #1f2733;
+        --surface-3: #242e3c;
+        --border: #2a3341;
+        --text: #e7eaf0;
+        --text-muted: #8993a6;
+        --text-dim: #5c6577;
+        --accent: #f2a93b;
+        --accent-dim: #f2a93b26;
+        --cyan: #4fd1c5;
+        --cyan-dim: #4fd1c526;
+        --success: #3ecf8e;
+        --success-dim: #3ecf8e1f;
+        --danger: #f2545b;
+        --danger-dim: #f2545b1f;
+        --radius: 14px;
+        --radius-sm: 9px;
+        --font-display: "Space Grotesk", sans-serif;
+        --font-body: "Inter", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg) var(--bg-grain);
+        color: var(--text);
+        font-family: var(--font-body);
+        min-height: 100vh;
+        padding: 28px 20px 80px;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+
+      header.top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-bottom: 26px;
+      }
+      .brand {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 4px var(--accent-dim);
+      }
+      .sync-state {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--surface);
+      }
+      .sync-state .pip {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--text-dim);
+        transition: background 0.3s;
+      }
+      .sync-state.ok .pip {
+        background: var(--success);
+        box-shadow: 0 0 6px var(--success);
+      }
+      .sync-state.err .pip {
+        background: var(--danger);
+        box-shadow: 0 0 6px var(--danger);
+      }
+      .sync-state.loading .pip {
+        background: var(--accent);
+        animation: pulse 1s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      .week-nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        font-family: var(--font-mono);
+        color: var(--text-muted);
+        font-size: 0.82rem;
+      }
+      .week-nav button {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          border-color 0.15s,
+          color 0.15s;
+      }
+      .week-nav button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .week-nav .today-btn {
+        width: auto;
+        padding: 0 12px;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+      }
+
+      .day-tabs {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .day-tab {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 6px 9px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        font-family: var(--font-mono);
+        position: relative;
+        overflow: hidden;
+      }
+      .day-tab .dname {
+        display: block;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--text);
+        letter-spacing: 0.01em;
+      }
+      .day-tab .ddate {
+        display: block;
+        font-size: 0.68rem;
+        color: var(--text-dim);
+        margin-top: 3px;
+      }
+      .day-tab.today .ddate {
+        color: var(--cyan);
+      }
+      .day-tab:hover {
+        border-color: var(--text-dim);
+      }
+      .day-tab.active {
+        background: linear-gradient(
+          180deg,
+          var(--accent-dim),
+          var(--surface) 70%
+        );
+        border-color: var(--accent);
+      }
+      .day-tab.active .dname {
+        color: var(--accent);
+      }
+      .day-tab .mark {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: transparent;
+      }
+      .day-tab.has-data .mark {
+        background: var(--cyan);
+        height: 2px;
+      }
+      .day-tab.active.has-data .mark {
+        background: var(--accent);
+        height: 3px;
+      }
+
+      .hint {
+        font-size: 0.74rem;
+        color: var(--text-dim);
+        margin-bottom: 20px;
+        font-family: var(--font-mono);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.15fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 860px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px 20px 18px;
+        margin-bottom: 20px;
+      }
+      .card h3 {
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        color: var(--text);
+      }
+      .card h3 .tag {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        color: var(--text-dim);
+        border: 1px solid var(--border);
+        padding: 2px 7px;
+        border-radius: 20px;
+        margin-left: auto;
+      }
+
+      .sched-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        margin-bottom: 10px;
+      }
+      .sched-item {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border-radius: var(--radius-sm);
+        border-left: 2px solid var(--border);
+      }
+      .sched-item .time {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--accent);
+        white-space: nowrap;
+        padding-top: 1px;
+        min-width: 74px;
+      }
+      .sched-item .desc {
+        font-size: 0.86rem;
+        color: var(--text);
+        line-height: 1.4;
+        flex: 1;
+      }
+      .sched-item.xe {
+        border-left-color: var(--cyan);
+      }
+      .sched-item.xe .time {
+        color: var(--cyan);
+      }
+      .item-del {
+        background: none;
+        border: none;
+        color: var(--text-dim);
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 0 2px;
+        flex-shrink: 0;
+        line-height: 1;
+        opacity: 0.5;
+        transition:
+          opacity 0.15s,
+          color 0.15s;
+      }
+      .item-del:hover {
+        opacity: 1;
+        color: var(--danger);
+      }
+      .empty-note {
+        color: var(--text-dim);
+        font-size: 0.82rem;
+        font-style: italic;
+        padding: 6px 2px;
+      }
+
+      .goal-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .goal-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border-radius: var(--radius-sm);
+        transition: background 0.15s;
+      }
+      .goal-item:hover {
+        background: var(--surface-3);
+      }
+      .goal-item .check {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        border: 1.5px solid var(--text-dim);
+        flex-shrink: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.68rem;
+        color: transparent;
+        transition: all 0.15s;
+      }
+      .goal-item.done .check {
+        background: var(--success);
+        border-color: var(--success);
+        color: #0a1410;
+      }
+      .goal-item.done .glabel {
+        color: var(--text-muted);
+        text-decoration: line-through;
+        text-decoration-color: var(--text-dim);
+      }
+      .goal-item .glabel {
+        font-size: 0.86rem;
+        flex: 1;
+        cursor: pointer;
+      }
+
+      /* Add-item controls */
+      .add-btn {
+        background: none;
+        border: 1px dashed var(--border);
+        color: var(--text-dim);
+        border-radius: var(--radius-sm);
+        padding: 9px 12px;
+        width: 100%;
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .add-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .add-form {
+        display: none;
+        gap: 8px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+        background: var(--surface-2);
+        padding: 10px;
+        border-radius: var(--radius-sm);
+      }
+      .add-form.open {
+        display: flex;
+      }
+      .add-form input {
+        background: var(--surface-3);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 7px;
+        padding: 8px 10px;
+        font-family: var(--font-body);
+        font-size: 0.8rem;
+        outline: none;
+      }
+      .add-form input:focus {
+        border-color: var(--accent);
+      }
+      .add-form .af-time {
+        flex: 0 0 130px;
+        font-family: var(--font-mono);
+      }
+      .add-form .af-desc {
+        flex: 1;
+        min-width: 120px;
+      }
+      .add-form .af-actions {
+        display: flex;
+        gap: 6px;
+        width: 100%;
+      }
+      .add-form .af-save {
+        background: var(--accent);
+        border: none;
+        color: #1a1206;
+        font-weight: 600;
+        font-size: 0.78rem;
+        border-radius: 7px;
+        padding: 7px 14px;
+        cursor: pointer;
+      }
+      .add-form .af-cancel {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        border-radius: 7px;
+        padding: 7px 14px;
+        cursor: pointer;
+      }
+
+      /* Gauge */
+      .gauge-wrap {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+      .gauge {
+        width: 112px;
+        height: 112px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        flex-shrink: 0;
+        background: conic-gradient(var(--success) 0deg, var(--border) 0deg);
+        transition: background 0.4s ease;
+      }
+      .gauge::before {
+        content: "";
+        position: absolute;
+        inset: 9px;
+        border-radius: 50%;
+        background: var(--surface);
+      }
+      .gauge .g-inner {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+      .gauge .g-status {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 0.92rem;
+      }
+      .gauge .g-sub {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        color: var(--text-dim);
+        margin-top: 2px;
+      }
+      .gauge.ok .g-status {
+        color: var(--success);
+      }
+      .gauge.warn .g-status {
+        color: var(--danger);
+      }
+
+      .gauge-figures {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+      }
+      .gauge-figures .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        min-width: 150px;
+      }
+      .gauge-figures .lbl {
+        color: var(--text-dim);
+      }
+      .gauge-figures .val.thu {
+        color: var(--success);
+      }
+      .gauge-figures .val.chi {
+        color: var(--danger);
+      }
+      .gauge-figures .rule {
+        color: var(--text-dim);
+        font-size: 0.68rem;
+        padding-top: 3px;
+        border-top: 1px solid var(--border);
+        margin-top: 2px;
+      }
+
+      .tx-form {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+      .tx-form select,
+      .tx-form input {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 9px 10px;
+        font-family: var(--font-body);
+        font-size: 0.82rem;
+        outline: none;
+      }
+      .tx-form select {
+        flex: 0 0 78px;
+      }
+      .tx-form input[type="number"] {
+        flex: 0 0 110px;
+        font-family: var(--font-mono);
+      }
+      .tx-form input[type="text"] {
+        flex: 1;
+        min-width: 100px;
+      }
+      .tx-form select:focus,
+      .tx-form input:focus {
+        border-color: var(--accent);
+      }
+      .tx-form button {
+        background: var(--accent);
+        border: none;
+        color: #1a1206;
+        font-weight: 600;
+        font-size: 0.82rem;
+        border-radius: 8px;
+        padding: 9px 16px;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      .tx-form button:hover {
+        opacity: 0.85;
+      }
+
+      .tx-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      .tx-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        background: var(--surface-2);
+        border-radius: 8px;
+        font-size: 0.8rem;
+      }
+      .tx-row .tx-type {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 5px;
+        flex-shrink: 0;
+      }
+      .tx-row .tx-type.thu {
+        background: var(--success-dim);
+        color: var(--success);
+      }
+      .tx-row .tx-type.chi {
+        background: var(--danger-dim);
+        color: var(--danger);
+      }
+      .tx-row .tx-note {
+        flex: 1;
+        color: var(--text-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tx-row .tx-amount {
+        font-family: var(--font-mono);
+        font-weight: 600;
+      }
+
+      footer.foot {
+        text-align: center;
+        color: var(--text-dim);
+        font-size: 0.72rem;
+        font-family: var(--font-mono);
+        margin-top: 30px;
+      }
+
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <div class="brand"><span class="dot"></span> Bảng Điều Khiển Ngày</div>
+        <div class="sync-state" id="syncState">
+          <span class="pip"></span
+          ><span id="syncText">Chưa kết nối Google Sheet</span>
+        </div>
+      </header>
+
+      <div class="week-nav">
+        <button id="prevWeek" title="Tuần trước">‹</button>
+        <span id="weekLabel">—</span>
+        <button id="nextWeek" title="Tuần sau">›</button>
+        <button id="gotoToday" class="today-btn">Hôm nay</button>
+      </div>
+
+      <div class="day-tabs" id="dayTabs"></div>
+      <div class="hint">
+        Lịch học / lịch chạy xe / mục tiêu Deep Work bên dưới lặp lại theo THỨ
+        trong tuần — thêm hoặc xoá ngay tại đây, không cần sửa code.
+      </div>
+
+      <div class="grid">
+        <div class="col">
+          <div class="card">
+            <h3>📘 Lịch học <span class="tag" id="tagHoc">--</span></h3>
+            <ul class="sched-list" id="listHoc"></ul>
+            <button class="add-btn" data-cat="hoc">+ Thêm lịch học</button>
+            <div class="add-form" id="formHoc">
+              <input
+                type="text"
+                class="af-time"
+                placeholder="Giờ (VD: 07:00 - 09:30)"
+              />
+              <input
+                type="text"
+                class="af-desc"
+                placeholder="Nội dung buổi học"
+              />
+              <div class="af-actions">
+                <button type="button" class="af-save" data-cat="hoc">
+                  Lưu
+                </button>
+                <button type="button" class="af-cancel" data-cat="hoc">
+                  Huỷ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>🏍️ Lịch chạy xe <span class="tag" id="tagXe">--</span></h3>
+            <ul class="sched-list" id="listXe"></ul>
+            <button class="add-btn" data-cat="xe">+ Thêm lịch chạy xe</button>
+            <div class="add-form" id="formXe">
+              <input
+                type="text"
+                class="af-time"
+                placeholder="Giờ (VD: 18:00 - 21:00)"
+              />
+              <input
+                type="text"
+                class="af-desc"
+                placeholder="Ghi chú ca chạy"
+              />
+              <div class="af-actions">
+                <button type="button" class="af-save" data-cat="xe">Lưu</button>
+                <button type="button" class="af-cancel" data-cat="xe">
+                  Huỷ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>
+              🎯 Mục tiêu Deep Work <span class="tag" id="tagGoal">0/0</span>
+            </h3>
+            <ul class="goal-list" id="listGoal"></ul>
+            <button class="add-btn" data-cat="deepwork">+ Thêm mục tiêu</button>
+            <div class="add-form" id="formDeepwork">
+              <input
+                type="text"
+                class="af-desc"
+                placeholder="Nội dung mục tiêu Deep Work"
+                style="flex: 1"
+              />
+              <div class="af-actions">
+                <button type="button" class="af-save" data-cat="deepwork">
+                  Lưu
+                </button>
+                <button type="button" class="af-cancel" data-cat="deepwork">
+                  Huỷ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="card">
+            <h3>💰 Tài chính trong ngày</h3>
+            <div class="gauge-wrap">
+              <div class="gauge ok" id="gauge">
+                <div class="g-inner">
+                  <div class="g-status" id="gaugeStatus">OK</div>
+                  <div class="g-sub">TRẠNG THÁI</div>
+                </div>
+              </div>
+              <div class="gauge-figures">
+                <div class="row">
+                  <span class="lbl">Tổng thu</span
+                  ><span class="val thu" id="totalThu">0đ</span>
+                </div>
+                <div class="row">
+                  <span class="lbl">Tổng chi</span
+                  ><span class="val chi" id="totalChi">0đ</span>
+                </div>
+                <div class="row">
+                  <span class="lbl">Số dư</span
+                  ><span class="val" id="totalNet">0đ</span>
+                </div>
+                <div class="rule">
+                  Cảnh báo nếu Chi &gt; 126.000đ hoặc Thu &lt; 220.000đ
+                </div>
+              </div>
+            </div>
+
+            <form class="tx-form" id="txForm">
+              <select id="txType">
+                <option value="thu">Thu</option>
+                <option value="chi">Chi</option>
+              </select>
+              <input
+                type="number"
+                id="txAmount"
+                placeholder="Số tiền"
+                min="0"
+                step="1000"
+                required
+              />
+              <input
+                type="text"
+                id="txNote"
+                placeholder="Ghi chú (VD: xăng xe, thưởng cuốc...)"
+              />
+              <button type="submit" id="txSubmit">+ Thêm</button>
+            </form>
+
+            <ul class="tx-list" id="txList"></ul>
+          </div>
+        </div>
+      </div>
+
+      <footer class="foot">
+        Dữ liệu được lưu tại chỗ (localStorage) và đồng bộ với Google Sheet của
+        bạn.
+      </footer>
+    </div>
+
+    <script>
+      /* ============================================================
+   1) CẤU HÌNH
+   ============================================================ */
+      const CONFIG = {
+        gasUrl:
+          "https://script.google.com/macros/s/AKfycbytVHK-d28rr-vPI1oaKY70veTY7gyUR6CQ_sGcbJ8vO-5-qYvRD7ma8eAjdge08iSB/exec",
+        chiThreshold: 126000,
+        thuThreshold: 220000,
+
+        // Lịch trình MẶC ĐỊNH chỉ dùng để "gieo" dữ liệu lần đầu tiên khi
+        // chưa có gì trong Google Sheet / localStorage. Sau đó bạn thêm/xoá
+        // trực tiếp trên giao diện, không cần sửa phần này nữa.
+        defaultSeed: {
+          T2: { hoc: [], xe: [], deepwork: [] },
+          T3: { hoc: [], xe: [], deepwork: [] },
+          T4: { hoc: [], xe: [], deepwork: [] },
+          T5: { hoc: [], xe: [], deepwork: [] },
+          T6: { hoc: [], xe: [], deepwork: [] },
+          T7: { hoc: [], xe: [], deepwork: [] },
+          CN: { hoc: [], xe: [], deepwork: [] },
+        },
+      };
+
+      const DAY_KEYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+      const DAY_LABELS = {
+        T2: "Thứ Hai",
+        T3: "Thứ Ba",
+        T4: "Thứ Tư",
+        T5: "Thứ Năm",
+        T6: "Thứ Sáu",
+        T7: "Thứ Bảy",
+        CN: "Chủ Nhật",
+      };
+
+      /* ============================================================
+   2) STATE
+   ============================================================ */
+      let currentWeekStart = getMonday(new Date());
+      let selectedDate = new Date();
+      let dayData = { transactions: [], goals: {} };
+      let schedule = loadScheduleLocal();
+
+      /* ============================================================
+   3) NGÀY THÁNG
+   ============================================================ */
+      function getMonday(d) {
+        const date = new Date(d);
+        const day = date.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        date.setDate(date.getDate() + diff);
+        date.setHours(0, 0, 0, 0);
+        return date;
+      }
+      function addDays(d, n) {
+        const r = new Date(d);
+        r.setDate(r.getDate() + n);
+        return r;
+      }
+      function fmtDate(d) {
+        return d.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+        });
+      }
+      function toISO(d) {
+        const y = d.getFullYear(),
+          m = String(d.getMonth() + 1).padStart(2, "0"),
+          day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+      function isSameDay(a, b) {
+        return toISO(a) === toISO(b);
+      }
+      function fmtMoney(n) {
+        return (n || 0).toLocaleString("vi-VN") + "đ";
+      }
+      function weekdayKeyOf(date) {
+        const map = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+        return map[date.getDay()];
+      }
+      function uid() {
+        return (
+          "it_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8)
+        );
+      }
+
+      /* ============================================================
+   4) LỊCH TRÌNH (schedule) — lưu cục bộ + đồng bộ Sheet
+   ============================================================ */
+      function loadScheduleLocal() {
+        const raw = localStorage.getItem("schedule_v1");
+        if (raw) {
+          try {
+            return JSON.parse(raw);
+          } catch (e) {
+            /* fallthrough */
+          }
+        }
+        return JSON.parse(JSON.stringify(CONFIG.defaultSeed));
+      }
+      function saveScheduleLocal() {
+        localStorage.setItem("schedule_v1", JSON.stringify(schedule));
+      }
+
+      async function fetchScheduleFromServer() {
+        if (!gasReady()) return;
+        try {
+          const res = await fetch(`${CONFIG.gasUrl}?action=schedule`);
+          const json = await res.json();
+          if (json.schedule) {
+            schedule = json.schedule;
+            saveScheduleLocal();
+            renderSchedule();
+          }
+        } catch (err) {
+          console.warn(
+            "Không tải được lịch trình từ Sheet, dùng dữ liệu cục bộ.",
+            err,
+          );
+        }
+      }
+
+      function addScheduleItem(category, time, desc) {
+        const weekday = weekdayKeyOf(selectedDate);
+        const item = { id: uid(), time: time || "", desc: desc };
+        schedule[weekday][category].push(item);
+        saveScheduleLocal();
+        renderSchedule();
+        gasPost({
+          action: "addScheduleItem",
+          id: item.id,
+          weekday,
+          category,
+          time: item.time,
+          desc: item.desc,
+        });
+      }
+
+      function deleteScheduleItem(category, id) {
+        const weekday = weekdayKeyOf(selectedDate);
+        schedule[weekday][category] = schedule[weekday][category].filter(
+          (i) => i.id !== id,
+        );
+        // dọn luôn trạng thái hoàn thành mục tiêu (nếu là deepwork) của mọi ngày liên quan tới id này
+        saveScheduleLocal();
+        renderSchedule();
+        gasPost({ action: "deleteScheduleItem", id });
+      }
+
+      /* ============================================================
+   5) RENDER: TUẦN + TAB NGÀY
+   ============================================================ */
+      function renderWeekNav() {
+        const weekDates = DAY_KEYS.map((_, i) => addDays(currentWeekStart, i));
+        document.getElementById("weekLabel").textContent =
+          `Tuần ${fmtDate(weekDates[0])} — ${fmtDate(weekDates[6])}`;
+
+        const tabs = document.getElementById("dayTabs");
+        tabs.innerHTML = "";
+        const today = new Date();
+
+        weekDates.forEach((date, i) => {
+          const key = DAY_KEYS[i];
+          const el = document.createElement("div");
+          el.className = "day-tab";
+          if (isSameDay(date, selectedDate)) el.classList.add("active");
+          if (isSameDay(date, today)) el.classList.add("today");
+          if (localStorage.getItem("ddb_" + toISO(date)))
+            el.classList.add("has-data");
+
+          el.innerHTML = `<span class="dname">${key}</span><span class="ddate">${fmtDate(date)}</span><span class="mark"></span>`;
+          el.addEventListener("click", () => selectDate(date));
+          tabs.appendChild(el);
+        });
+      }
+
+      function selectDate(date) {
+        selectedDate = new Date(date);
+        renderWeekNav();
+        renderSchedule();
+        loadDayData(toISO(selectedDate));
+      }
+
+      /* ============================================================
+   6) RENDER: LỊCH TRÌNH (học / xe / deepwork)
+   ============================================================ */
+      function renderSchedule() {
+        const key = weekdayKeyOf(selectedDate);
+        const sched = schedule[key] || { hoc: [], xe: [], deepwork: [] };
+
+        document.getElementById("tagHoc").textContent = DAY_LABELS[key];
+        document.getElementById("tagXe").textContent = DAY_LABELS[key];
+
+        renderTimedList("listHoc", sched.hoc, "hoc", false);
+        renderTimedList("listXe", sched.xe, "xe", true);
+        renderGoals(sched.deepwork || []);
+      }
+
+      function renderTimedList(elId, items, category, isXe) {
+        const list = document.getElementById(elId);
+        if (!items.length) {
+          list.innerHTML = `<li class="empty-note">Chưa có mục nào — bấm "+ Thêm" bên dưới để thêm.</li>`;
+          return;
+        }
+        list.innerHTML = items
+          .map(
+            (i) => `
+    <li class="sched-item${isXe ? " xe" : ""}">
+      ${i.time ? `<span class="time">${escapeHtml(i.time)}</span>` : ""}
+      <span class="desc">${escapeHtml(i.desc)}</span>
+      <button class="item-del" data-cat="${category}" data-id="${i.id}" title="Xoá">✕</button>
+    </li>`,
+          )
+          .join("");
+      }
+
+      function renderGoals(goals) {
+        const list = document.getElementById("listGoal");
+        if (!goals.length) {
+          list.innerHTML = `<li class="empty-note">Chưa có mục tiêu nào — bấm "+ Thêm" bên dưới để thêm.</li>`;
+          document.getElementById("tagGoal").textContent = "0/0";
+          return;
+        }
+        let doneCount = 0;
+        list.innerHTML = goals
+          .map((g) => {
+            const done = !!dayData.goals[g.id];
+            if (done) doneCount++;
+            return `
+      <li class="goal-item${done ? " done" : ""}" data-id="${g.id}">
+        <span class="check" data-id="${g.id}">✓</span>
+        <span class="glabel" data-id="${g.id}">${escapeHtml(g.desc)}</span>
+        <button class="item-del" data-cat="deepwork" data-id="${g.id}" title="Xoá">✕</button>
+      </li>`;
+          })
+          .join("");
+        document.getElementById("tagGoal").textContent =
+          `${doneCount}/${goals.length}`;
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[m],
+        );
+      }
+
+      /* Click / toggle handlers (delegation) */
+      document.getElementById("listGoal").addEventListener("click", (e) => {
+        const del = e.target.closest(".item-del");
+        if (del) {
+          deleteScheduleItem("deepwork", del.dataset.id);
+          return;
+        }
+        const target = e.target.closest(".check, .glabel");
+        if (target) {
+          toggleGoal(target.dataset.id);
+        }
+      });
+      document.getElementById("listHoc").addEventListener("click", (e) => {
+        const del = e.target.closest(".item-del");
+        if (del) deleteScheduleItem("hoc", del.dataset.id);
+      });
+      document.getElementById("listXe").addEventListener("click", (e) => {
+        const del = e.target.closest(".item-del");
+        if (del) deleteScheduleItem("xe", del.dataset.id);
+      });
+
+      function toggleGoal(id) {
+        const newVal = !dayData.goals[id];
+        dayData.goals[id] = newVal;
+        persistLocal();
+        renderSchedule();
+        syncGoal(id, newVal);
+      }
+
+      /* Add-form open/close/save for all 3 categories */
+      document.querySelectorAll(".add-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const cat = btn.dataset.cat;
+          document
+            .getElementById("form" + capitalize(cat))
+            .classList.toggle("open");
+        });
+      });
+      document.querySelectorAll(".af-cancel").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const cat = btn.dataset.cat;
+          const form = document.getElementById("form" + capitalize(cat));
+          form.classList.remove("open");
+          form.querySelectorAll("input").forEach((i) => (i.value = ""));
+        });
+      });
+      document.querySelectorAll(".af-save").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const cat = btn.dataset.cat;
+          const form = document.getElementById("form" + capitalize(cat));
+          const descInput = form.querySelector(".af-desc");
+          const timeInput = form.querySelector(".af-time");
+          const desc = descInput.value.trim();
+          if (!desc) {
+            descInput.focus();
+            return;
+          }
+          addScheduleItem(cat, timeInput ? timeInput.value.trim() : "", desc);
+          form.querySelectorAll("input").forEach((i) => (i.value = ""));
+          form.classList.remove("open");
+        });
+      });
+      function capitalize(s) {
+        return s.charAt(0).toUpperCase() + s.slice(1);
+      }
+
+      /* ============================================================
+   7) TÀI CHÍNH
+   ============================================================ */
+      function computeFinance() {
+        let totalThu = 0,
+          totalChi = 0;
+        dayData.transactions.forEach((t) => {
+          if (t.type === "thu") totalThu += Number(t.amount) || 0;
+          else totalChi += Number(t.amount) || 0;
+        });
+        return { totalThu, totalChi, net: totalThu - totalChi };
+      }
+
+      function renderFinance() {
+        const { totalThu, totalChi, net } = computeFinance();
+        document.getElementById("totalThu").textContent = fmtMoney(totalThu);
+        document.getElementById("totalChi").textContent = fmtMoney(totalChi);
+        const netEl = document.getElementById("totalNet");
+        netEl.textContent = fmtMoney(net);
+        netEl.style.color = net >= 0 ? "var(--success)" : "var(--danger)";
+
+        const isWarn =
+          totalChi > CONFIG.chiThreshold || totalThu < CONFIG.thuThreshold;
+        const gauge = document.getElementById("gauge");
+        const status = document.getElementById("gaugeStatus");
+        gauge.classList.toggle("ok", !isWarn);
+        gauge.classList.toggle("warn", isWarn);
+        status.textContent = isWarn ? "CẢNH BÁO" : "OK";
+        const pct = Math.min(
+          100,
+          totalThu > 0 ? (totalThu / (CONFIG.thuThreshold * 1.5)) * 100 : 0,
+        );
+        const color = isWarn ? "var(--danger)" : "var(--success)";
+        gauge.style.background = `conic-gradient(${color} ${pct * 3.6}deg, var(--border) 0deg)`;
+
+        const list = document.getElementById("txList");
+        list.innerHTML = dayData.transactions.length
+          ? dayData.transactions
+              .map(
+                (t) => `
+    <li class="tx-row">
+      <span class="tx-type ${t.type}">${t.type === "thu" ? "THU" : "CHI"}</span>
+      <span class="tx-note">${escapeHtml(t.note || "(không ghi chú)")}</span>
+      <span class="tx-amount">${fmtMoney(t.amount)}</span>
+      <button class="item-del" data-id="${t.id}" title="Xoá">✕</button>
+    </li>`,
+              )
+              .join("")
+          : `<li class="empty-note">Chưa có giao dịch nào trong ngày.</li>`;
+
+        list.querySelectorAll(".item-del").forEach((btn) => {
+          btn.addEventListener("click", () =>
+            deleteTransaction(btn.dataset.id),
+          );
+        });
+      }
+
+      document.getElementById("txForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const type = document.getElementById("txType").value;
+        const amount = Number(document.getElementById("txAmount").value);
+        const note = document.getElementById("txNote").value.trim();
+        if (!amount || amount <= 0) return;
+
+        const entry = {
+          id: "tx_" + Date.now(),
+          type,
+          amount,
+          note,
+          date: toISO(selectedDate),
+        };
+        dayData.transactions.push(entry);
+        persistLocal();
+        renderFinance();
+        renderWeekNav();
+        gasPost({ action: "addTransaction", ...entry });
+
+        document.getElementById("txAmount").value = "";
+        document.getElementById("txNote").value = "";
+      });
+
+      function deleteTransaction(id) {
+        dayData.transactions = dayData.transactions.filter((t) => t.id !== id);
+        persistLocal();
+        renderFinance();
+        gasPost({ action: "deleteTransaction", id, date: toISO(selectedDate) });
+      }
+
+      /* ============================================================
+   8) LƯU CỤC BỘ THEO NGÀY
+   ============================================================ */
+      function persistLocal() {
+        localStorage.setItem(
+          "ddb_" + toISO(selectedDate),
+          JSON.stringify(dayData),
+        );
+      }
+      function loadLocal(dateStr) {
+        const raw = localStorage.getItem("ddb_" + dateStr);
+        return raw ? JSON.parse(raw) : { transactions: [], goals: {} };
+      }
+
+      /* ============================================================
+   9) ĐỒNG BỘ GOOGLE SHEET
+   ============================================================ */
+      function setSyncState(state, text) {
+        const el = document.getElementById("syncState");
+        el.className = "sync-state " + state;
+        document.getElementById("syncText").textContent = text;
+      }
+      function gasReady() {
+        return CONFIG.gasUrl && CONFIG.gasUrl.startsWith("http");
+      }
+
+      async function loadDayData(dateStr) {
+        dayData = loadLocal(dateStr);
+        renderFinance();
+        renderSchedule();
+
+        if (!gasReady()) {
+          setSyncState("", "Chưa cấu hình Google Sheet (xem hướng dẫn)");
+          return;
+        }
+
+        setSyncState("loading", "Đang tải từ Google Sheet...");
+        try {
+          const res = await fetch(`${CONFIG.gasUrl}?date=${dateStr}`);
+          const json = await res.json();
+          if (json.error) throw new Error(json.error);
+          dayData = {
+            transactions: json.transactions || [],
+            goals: json.goals || {},
+          };
+          persistLocal();
+          renderFinance();
+          renderSchedule();
+          renderWeekNav();
+          setSyncState("ok", "Đã đồng bộ với Google Sheet");
+        } catch (err) {
+          console.error(err);
+          setSyncState(
+            "err",
+            "Không tải được từ Sheet — đang dùng dữ liệu cục bộ",
+          );
+        }
+      }
+
+      async function gasPost(payload) {
+        if (!gasReady()) {
+          setSyncState("", "Chưa cấu hình Google Sheet (xem hướng dẫn)");
+          return;
+        }
+        setSyncState("loading", "Đang lưu vào Google Sheet...");
+        try {
+          const res = await fetch(CONFIG.gasUrl, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload),
+          });
+          const json = await res.json();
+          if (json.status !== "success")
+            throw new Error(json.message || "Lỗi không xác định");
+          setSyncState("ok", "Đã lưu vào Google Sheet");
+        } catch (err) {
+          console.error(err);
+          setSyncState(
+            "err",
+            "Lưu Google Sheet thất bại — dữ liệu vẫn an toàn cục bộ",
+          );
+        }
+      }
+
+      function syncGoal(id, completed) {
+        gasPost({
+          action: "setGoal",
+          date: toISO(selectedDate),
+          goalId: id,
+          completed,
+        });
+      }
+
+      /* ============================================================
+   10) ĐIỀU HƯỚNG TUẦN
+   ============================================================ */
+      document.getElementById("prevWeek").addEventListener("click", () => {
+        currentWeekStart = addDays(currentWeekStart, -7);
+        renderWeekNav();
+      });
+      document.getElementById("nextWeek").addEventListener("click", () => {
+        currentWeekStart = addDays(currentWeekStart, 7);
+        renderWeekNav();
+      });
+      document.getElementById("gotoToday").addEventListener("click", () => {
+        currentWeekStart = getMonday(new Date());
+        selectDate(new Date());
+      });
+
+      /* ============================================================
+   11) KHỞI ĐỘNG
+   ============================================================ */
+      (async function init() {
+        selectDate(new Date());
+        await fetchScheduleFromServer(); // nếu đã cấu hình Sheet, lịch trình sẽ đồng bộ đa thiết bị
+      })();
+    </script>
+  </body>
+</html>
