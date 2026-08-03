@@ -876,9 +876,16 @@
       /* ============================================================
    1) CẤU HÌNH
    ============================================================ */
+      const queryParams = new URLSearchParams(window.location.search);
       const CONFIG = {
         gasUrl:
-          "https://script.google.com/macros/s/AKfycbz-mr94XFHMEyr-3hu262z53hYYiu1bB5N6Nf_-qb5LiNKk0zqwnVgZVSaI3NRlt3mU/exec",
+          queryParams.get("gasUrl") ||
+          localStorage.getItem("ddb_gasUrl") ||
+          "https://script.google.com/macros/s/AKfycbxQim3dKa6TuPEpzdEqdtkqiEoNDtTf250C34X1Ak0R8a3s3kvi4c5OqFs0eMYEZWZh/exec",
+        sheetId:
+          queryParams.get("sheetId") ||
+          localStorage.getItem("ddb_sheetId") ||
+          "",
         chiThreshold: 70000,
         thuThreshold: 200000,
 
@@ -895,6 +902,13 @@
           CN: { hoc: [], xe: [], deepwork: [] },
         },
       };
+
+      if (queryParams.get("gasUrl")) {
+        localStorage.setItem("ddb_gasUrl", CONFIG.gasUrl);
+      }
+      if (queryParams.get("sheetId")) {
+        localStorage.setItem("ddb_sheetId", CONFIG.sheetId);
+      }
 
       const DAY_KEYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
       const DAY_LABELS = {
@@ -958,7 +972,55 @@
           "it_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8)
         );
       }
+      function buildApiUrl(params = {}) {
+        const searchParams = new URLSearchParams();
+        if (CONFIG.sheetId) searchParams.set("sheetId", CONFIG.sheetId);
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            searchParams.set(key, String(value));
+          }
+        });
 
+        const qs = searchParams.toString();
+        return qs
+          ? `${CONFIG.gasUrl}${CONFIG.gasUrl.includes("?") ? "&" : "?"}${qs}`
+          : CONFIG.gasUrl;
+      }
+      // 1. Hàm parse ngày an toàn, chống trôi múi giờ UTC
+      function parseLocalDate(dateInput) {
+        if (dateInput instanceof Date) return dateInput;
+        if (typeof dateInput === "string") {
+          // Nếu có dạng ISO 2026-09-06T17:00:00.000Z, cắt lấy phần yyyy-MM-dd
+          const cleanStr = dateInput.split("T")[0];
+          const parts = cleanStr.split("-");
+          if (parts.length === 3) {
+            // Khởi tạo theo năm, tháng (0-11), ngày theo giờ địa phương
+            return new Date(
+              Number(parts[0]),
+              Number(parts[1]) - 1,
+              Number(parts[2]),
+            );
+          }
+        }
+        const d = new Date(dateInput);
+        return isNaN(d.getTime()) ? new Date() : d;
+      }
+
+      // 2. Hàm lấy thứ trong tuần an toàn
+      function weekdayKeyOf(date) {
+        const map = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+        const safeDate = parseLocalDate(date);
+        return map[safeDate.getDay()];
+      }
+
+      // 3. Cập nhật hàm toISO để trả về yyyy-MM-dd chuẩn múi giờ địa phương
+      function toISO(d) {
+        const safeDate = parseLocalDate(d);
+        const y = safeDate.getFullYear();
+        const m = String(safeDate.getMonth() + 1).padStart(2, "0");
+        const day = String(safeDate.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
       /* ============================================================
    4) LỊCH TRÌNH (schedule) — lưu cục bộ + đồng bộ Sheet
    ============================================================ */
@@ -980,7 +1042,7 @@
       async function fetchScheduleFromServer() {
         if (!gasReady()) return;
         try {
-          const res = await fetch(`${CONFIG.gasUrl}?action=schedule`);
+          const res = await fetch(buildApiUrl({ action: "schedule" }));
           const json = await res.json();
           if (json.schedule) {
             schedule = json.schedule;
@@ -994,40 +1056,49 @@
           );
         }
       }
-
       function addScheduleItem(category, time, desc) {
+        const weekday = weekdayKeyOf(selectedDate);
+
+        // Bổ sung kiểm tra an toàn
+        if (!weekday || weekday === "undefined") {
+          console.error("Lỗi: Không xác định được thứ trong tuần.");
+          return;
+        }
+
         const item = { id: uid(), time: time || "", desc: desc };
 
-        // Cập nhật vào dữ liệu của ngày thay vì biến schedule tuần cũ
-        if (!dayData.schedule)
-          dayData.schedule = { hoc: [], xe: [], deepwork: [] };
-        dayData.schedule[category].push(item);
+        if (!schedule[weekday]) {
+          schedule[weekday] = { hoc: [], xe: [], deepwork: [] };
+        }
+        schedule[weekday][category].push(item);
 
-        persistLocal();
+        saveScheduleLocal();
         renderSchedule();
 
-        // Gửi date lên server thay vì weekday
         gasPost({
           action: "addScheduleItem",
           id: item.id,
-          date: toISO(selectedDate), // Điểm khắc phục lỗi undefined
+          weekday: weekday, // Đảm bảo luôn là chuỗi hợp lệ (T2-CN)
           category,
           time: item.time,
           desc: item.desc,
         });
       }
-
       function deleteScheduleItem(category, id) {
-        // Xoá trong dữ liệu của ngày
-        if (dayData.schedule && dayData.schedule[category]) {
-          dayData.schedule[category] = dayData.schedule[category].filter(
+        const weekday = weekdayKeyOf(selectedDate);
+        if (schedule[weekday] && schedule[weekday][category]) {
+          schedule[weekday][category] = schedule[weekday][category].filter(
             (i) => i.id !== id,
           );
         }
 
-        persistLocal();
+        saveScheduleLocal();
         renderSchedule();
-        gasPost({ action: "deleteScheduleItem", id });
+        gasPost({ action: "deleteScheduleItem", id, weekday, category }).then(
+          () => {
+            if (gasReady()) fetchScheduleFromServer();
+          },
+        );
       }
       /* ============================================================
    5) RENDER: TUẦN + TAB NGÀY
@@ -1338,14 +1409,17 @@
 
         setSyncState("loading", "Đang tải từ Google Sheet...");
         try {
-          const res = await fetch(`${CONFIG.gasUrl}?date=${dateStr}`);
+          const res = await fetch(buildApiUrl({ date: dateStr }));
           const json = await res.json();
           if (json.error) throw new Error(json.error);
           dayData = {
             transactions: json.transactions || [],
             goals: json.goals || {},
           };
-          if (json.stats) currentStats = json.stats;
+          currentStats = json.stats || {
+            week: { thu: 0, chi: 0 },
+            month: { thu: 0, chi: 0 },
+          };
           persistLocal();
           renderFinance();
           renderSchedule();
@@ -1367,10 +1441,12 @@
         }
         setSyncState("loading", "Đang lưu vào Google Sheet...");
         try {
+          const body = { ...payload };
+          if (CONFIG.sheetId) body.sheetId = CONFIG.sheetId;
           const res = await fetch(CONFIG.gasUrl, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload),
+            body: JSON.stringify(body),
           });
           const json = await res.json();
           if (json.status !== "success")
